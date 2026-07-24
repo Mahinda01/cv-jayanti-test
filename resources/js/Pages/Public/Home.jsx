@@ -1,20 +1,16 @@
-import PublicLayout from '@/Layouts/PublicLayout';
-import Navbar from '@/Components/Public/Navbar';
-import HeroSection from '@/Components/Public/HeroSection';
-import AboutSection from '@/Components/Public/AboutSection';
-import ProductSection from '@/Components/Public/ProductSection';
-import ContactSection from '@/Components/Public/ContactSection';
-import Footer from '@/Components/Public/Footer';
+import PublicLayout from '../../Layouts/PublicLayout';
+import HeroSection from '../../Components/Public/HeroSection';
+import AboutSection from '../../Components/Public/AboutSection';
+import ProductSection from '../../Components/Public/ProductSection';
+import ContactSection from '../../Components/Public/ContactSection';
 
-export default function Home() {
+export default function Home({ products = [] }) {
     return (
-        <PublicLayout>
-            <Navbar />
+        <PublicLayout title="CV Jayanti Muliatama">
             <HeroSection />
             <AboutSection />
-            <ProductSection />
+            <ProductSection products={products} />
             <ContactSection />
-            <Footer />
         </PublicLayout>
     );
 }

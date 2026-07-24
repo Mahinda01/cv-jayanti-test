@@ -1,42 +1,86 @@
-import Logo from '@/Components/Public/Logo';
+import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 
 export default function Footer() {
+    const whatsappLink =
+        'https://wa.me/6282174369753?text=Halo%20CV%20Jayanti%20Muliatama,%20saya%20ingin%20bertanya%20tentang%20produk%20hidrolik.';
+
+    const mapLink =
+        'https://www.google.com/maps/search/?api=1&query=3.5689366441973083,98.66365652935305';
+
     return (
-        <footer className="bg-slate-950 px-6 py-14 text-white">
-            <div className="mx-auto max-w-7xl">
-                <div className="grid gap-10 md:grid-cols-3">
-                    <div>
-                        <Logo />
-
-                        <p className="mt-5 max-w-sm text-sm leading-7 text-slate-400">
-                            Distributor hydraulic hose dan perlengkapan hidrolik
-                            berkualitas untuk kebutuhan industri.
-                        </p>
-                    </div>
-
-                    <div>
-                        <h3 className="font-bold">Kontak</h3>
-
-                        <div className="mt-5 space-y-2 text-sm leading-6 text-slate-400">
-                            <p>Jl. Industri Raya No. 123</p>
-                            <p>Medan, Sumatera Utara</p>
-                            <p>+62 812-3456-7890</p>
-                            <p>info@jayantimuliatama.com</p>
+        <footer className="border-t border-[#334155]/70 bg-[#131d31] px-6 py-10 text-white">
+            <div className="mx-auto max-w-3xl text-center">
+                <div className="flex justify-center">
+                    <div className="inline-flex items-center gap-3">
+                        <div className="site-logo flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+                            <img
+                                src="/images/logo/logo-cv-jayanti.png"
+                                alt="Logo CV Jayanti Muliatama"
+                                className="h-full w-full object-contain"
+                            />
                         </div>
-                    </div>
 
-                    <div>
-                        <h3 className="font-bold">Jam Operasional</h3>
+                        <div className="text-left leading-none">
+                            <h2 className="text-xl font-extrabold leading-tight text-white">
+                                CV Jayanti Muliatama
+                            </h2>
 
-                        <div className="mt-5 space-y-2 text-sm leading-6 text-slate-400">
-                            <p>Senin – Jumat: 08.00 – 17.00</p>
-                            <p>Sabtu: 08.00 – 14.00</p>
-                            <p>Minggu/Hari Besar: Tutup</p>
+                            <p className="mt-0.5 text-sm font-medium leading-tight text-gray-400">
+                                Hydraulic Solutions
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-12 border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
+                <p className="mx-auto mt-6 max-w-2xl text-sm font-medium leading-7 text-gray-400">
+                    <span className="block">
+                        Distributor hydraulic hose dan perlengkapan hidrolik
+                        berkualitas
+                    </span>
+                    <span className="block">
+                        untuk mendukung kebutuhan industri.
+                    </span>
+                </p>
+
+                <div className="mt-7 flex justify-center gap-4">
+                    <a
+                        href="tel:082174369753"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#334155] bg-[#1d293d] text-[#3B82F6] transition hover:border-[#155dfc] hover:bg-[#203a65]"
+                        aria-label="Telepon"
+                    >
+                        <Phone size={20} />
+                    </a>
+
+                    <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#334155] bg-[#1d293d] text-[#3B82F6] transition hover:border-[#16A34A] hover:bg-[#203a65] hover:text-[#16A34A]"
+                        aria-label="WhatsApp"
+                    >
+                        <MessageCircle size={20} />
+                    </a>
+
+                    <a
+                        href="mailto:cvjayantimuliatama@gmail.com"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#334155] bg-[#1d293d] text-[#3B82F6] transition hover:border-[#155dfc] hover:bg-[#203a65]"
+                        aria-label="Email"
+                    >
+                        <Mail size={20} />
+                    </a>
+
+                    <a
+                        href={mapLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#334155] bg-[#1d293d] text-[#3B82F6] transition hover:border-[#155dfc] hover:bg-[#203a65]"
+                        aria-label="Lokasi"
+                    >
+                        <MapPin size={20} />
+                    </a>
+                </div>
+
+                <div className="mt-8 border-t border-[#334155]/50 pt-6 text-sm font-medium text-gray-500">
                     © 2026 CV Jayanti Muliatama. All rights reserved.
                 </div>
             </div>

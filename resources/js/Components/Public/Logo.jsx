@@ -1,19 +1,34 @@
 import { Link } from '@inertiajs/react';
 
-export default function Logo() {
+export default function Logo({ variant = 'default' }) {
+    const titleColor =
+        variant === 'light'
+            ? 'text-white'
+            : 'text-slate-900 dark:text-white';
+
+    const subtitleColor =
+        variant === 'light'
+            ? 'text-gray-400'
+            : 'text-slate-500 dark:text-gray-400';
+
     return (
-        <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-[38px] w-[38px] items-center justify-center rounded-xl bg-blue-600 text-[16px] font-bold text-white shadow-sm">
-                JM
+        <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="site-logo flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+                <img
+                    src="/images/logo/logo-cv-jayanti.png"
+                    alt="Logo CV Jayanti Muliatama"
+                    className="h-full w-full object-contain"
+                />
             </div>
 
-            <div className="leading-tight">
-                <div className="text-[15px] font-bold text-[#101828] dark:text-white">
+            <div className="leading-none">
+                <h1 className={`text-[17px] font-extrabold leading-tight ${titleColor}`}>
                     CV Jayanti Muliatama
-                </div>
-                <div className="text-[12px] font-normal text-slate-500 dark:text-slate-400">
+                </h1>
+
+                <p className={`mt-0.5 text-[13px] font-medium leading-tight ${subtitleColor}`}>
                     Hydraulic Solutions
-                </div>
+                </p>
             </div>
         </Link>
     );

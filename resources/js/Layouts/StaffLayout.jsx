@@ -1,50 +1,26 @@
-import LogoutButton from '@/Components/Auth/LogoutButton';
+import StaffSidebar from '@/Components/Staff/StaffSidebar';
+import StaffTopbar from '@/Components/Staff/StaffTopbar';
 
-export default function StaffLayout({ children }) {
+export default function StaffLayout({
+    children,
+    showSearch = false,
+    searchValue = '',
+    onSearchChange,
+    searchPlaceholder = 'Cari data...',
+}) {
     return (
-        <div className="min-h-screen bg-slate-100">
-            <div className="flex">
-                <aside className="flex min-h-screen w-64 flex-col bg-blue-900 p-6 text-white">
-                    <div>
-                        <h1 className="text-lg font-bold">Staff</h1>
+        <div className="flex min-h-screen bg-slate-50 transition-colors duration-300 dark:bg-[#131d31]">
+            <StaffSidebar />
 
-                        <nav className="mt-8 space-y-3 text-sm">
-                            <a
-                                href="/staff/dashboard"
-                                className="block rounded-lg px-3 py-2 hover:bg-blue-800"
-                            >
-                                Dashboard
-                            </a>
+            <div className="min-w-0 flex-1">
+                <StaffTopbar
+                    showSearch={showSearch}
+                    searchValue={searchValue}
+                    onSearchChange={onSearchChange}
+                    searchPlaceholder={searchPlaceholder}
+                />
 
-                            <a
-                                href="#"
-                                className="block rounded-lg px-3 py-2 hover:bg-blue-800"
-                            >
-                                Data Produk
-                            </a>
-
-                            <a
-                                href="#"
-                                className="block rounded-lg px-3 py-2 hover:bg-blue-800"
-                            >
-                                Data Pelanggan
-                            </a>
-
-                            <a
-                                href="#"
-                                className="block rounded-lg px-3 py-2 hover:bg-blue-800"
-                            >
-                                Transaksi Penjualan
-                            </a>
-                        </nav>
-                    </div>
-
-                    <div className="mt-auto pt-6">
-                        <LogoutButton />
-                    </div>
-                </aside>
-
-                <main className="flex-1 p-6">
+                <main className="px-6 py-4">
                     {children}
                 </main>
             </div>

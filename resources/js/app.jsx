@@ -1,11 +1,20 @@
-import '../css/app.css';
 import './bootstrap';
+import '../css/app.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const savedTheme = localStorage.getItem('theme');
+
+if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+} else {
+    document.documentElement.classList.remove('dark');
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -20,6 +29,6 @@ createInertiaApp({
         root.render(<App {...props} />);
     },
     progress: {
-        color: '#4B5563',
+        color: '#2563eb',
     },
 });

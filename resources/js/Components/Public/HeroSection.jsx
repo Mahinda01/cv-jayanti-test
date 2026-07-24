@@ -1,13 +1,22 @@
-import { Package } from 'lucide-react';
-
 export default function HeroSection() {
-    const scrollToSection = (id) => {
-        const element = document.getElementById(id);
+    const scrollToProducts = () => {
+        const section = document.getElementById('products');
 
-        if (element) {
-            element.scrollIntoView({
+        if (section) {
+            window.scrollTo({
+                top: section.offsetTop - 78,
                 behavior: 'smooth',
-                block: 'start',
+            });
+        }
+    };
+
+    const scrollToContact = () => {
+        const section = document.getElementById('contact');
+
+        if (section) {
+            window.scrollTo({
+                top: section.offsetTop - 78,
+                behavior: 'smooth',
             });
         }
     };
@@ -15,47 +24,49 @@ export default function HeroSection() {
     return (
         <section
             id="home"
-            className="bg-gradient-to-br from-blue-50 via-white to-gray-50 px-0 pb-[110px] pt-32 transition-colors duration-300 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800"
+            className="min-h-[calc(100vh-78px)] scroll-mt-[78px] bg-white transition-colors duration-300 dark:bg-[#131d31]"
         >
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="grid items-center gap-12 md:grid-cols-2">
-                    <div>
-                        <h1 className="mb-4 w-full max-w-[400px] text-[48px] font-extrabold leading-[60px] tracking-tight text-[#101828] dark:text-white">
-                            Solusi Hidrolik untuk Industri Anda
-                        </h1>
+            <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-12 pt-14 lg:grid-cols-2 lg:pt-16">
+                {/* Bagian teks */}
+                <div>
+                    <h2 className="max-w-xl text-4xl font-extrabold leading-tight text-slate-900 dark:text-white md:text-5xl">
+                        Solusi Hidrolik untuk Industri Anda
+                    </h2>
 
-                        <p className="mb-8 max-w-[520px] text-[18px] font-normal leading-[28px] text-gray-600 dark:text-gray-300">
-                            Distributor hydraulic hose dan perlengkapan hidrolik berkualitas.
-                        </p>
+                    <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-slate-600 dark:text-gray-400">
+                        Distributor hydraulic hose dan perlengkapan hidrolik
+                        berkualitas.
+                    </p>
 
-                        <div className="flex gap-4">
-                            <button
-                                type="button"
-                                onClick={() => scrollToSection('products')}
-                                className="rounded-lg bg-blue-600 px-8 py-3.5 font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-blue-700 hover:shadow-xl"
-                            >
-                                Lihat Produk
-                            </button>
+                    <div className="mt-8 flex flex-wrap gap-4">
+                        <button
+                            type="button"
+                            onClick={scrollToProducts}
+                            className="rounded-xl bg-blue-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 dark:bg-[#155dfc] dark:shadow-[#155dfc]/25 dark:hover:bg-blue-600"
+                        >
+                            Lihat Produk
+                        </button>
 
-                            <button
-                                type="button"
-                                onClick={() => scrollToSection('contact')}
-                                className="rounded-lg border-2 border-blue-600 bg-white px-8 py-3.5 font-semibold text-blue-600 transition-all duration-300 hover:scale-105 hover:bg-blue-50 dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.08)] dark:text-[#60A5FA] dark:hover:bg-[#2563EB] dark:hover:text-white"
-                            >
-                                Hubungi Kami
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={scrollToContact}
+                            className="rounded-xl border-2 border-blue-600 px-8 py-4 text-sm font-bold text-blue-600 transition hover:bg-blue-50 dark:border-[#155dfc] dark:text-[#155dfc] dark:hover:bg-[#1d293d]"
+                        >
+                            Hubungi Kami
+                        </button>
                     </div>
+                </div>
 
-                    <div className="flex justify-center">
-                        <div className="group relative flex h-80 w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 shadow-lg">
-                            <div className="absolute inset-0 bg-blue-600 opacity-10 transition-opacity duration-500 group-hover:opacity-20"></div>
-
-                            <Package
-                                size={120}
-                                className="relative z-10 text-blue-600 opacity-40 transition-transform duration-500 group-hover:scale-110"
-                            />
-                        </div>
+                {/* Bagian gambar */}
+                <div className="flex justify-center lg:justify-end">
+                    <div className="flex aspect-[16/10] w-full max-w-xl items-center justify-center bg-transparent">
+                        <img
+                            src="/images/hero/hero-hydraulic.png"
+                            alt="Excavator dan perlengkapan hydraulic"
+                            className="h-full w-full select-none object-contain object-center drop-shadow-[0_14px_18px_rgba(15,23,42,0.18)] transition duration-300 dark:drop-shadow-[0_14px_20px_rgba(0,0,0,0.35)]"
+                            loading="eager"
+                            draggable="false"
+                        />
                     </div>
                 </div>
             </div>

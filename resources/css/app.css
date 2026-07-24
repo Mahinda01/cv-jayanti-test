@@ -1,4 +1,6 @@
 @import url('https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap');
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @tailwind base;
 @tailwind components;
@@ -6,11 +8,48 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 64px;
+    scroll-padding-top: 78px;
 }
 
 body {
     font-family: 'Manrope', sans-serif;
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+.dark body {
+    background-color: #131d31;
+    color: #ffffff;
+}
+
+* {
+    border-color: #e2e8f0;
+}
+
+.dark * {
+    border-color: #334155;
+}
+
+body,
+body * {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 250ms;
+    transition-timing-function: ease-in-out;
+}
+
+/* Transisi khusus saat ganti dark/light mode */
+html.theme-changing *,
+html.theme-changing *::before,
+html.theme-changing *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 380ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Logo tidak ikut transisi dark/light */
+.site-logo,
+.site-logo * {
+    transition: none !important;
 }
 
 /* Auth / Login Animation */
@@ -134,3 +173,98 @@ body {
 .auth-float-reverse {
     animation: authFloatReverse 8s ease-in-out infinite;
 }
+
+/* Shadcn / Mapcn Variables */
+@layer base {
+    :root {
+        --background: #ffffff;
+        --foreground: #0f172a;
+        --card: #ffffff;
+        --card-foreground: #0f172a;
+        --popover: #ffffff;
+        --popover-foreground: #0f172a;
+        --primary: #155dfc;
+        --primary-foreground: #ffffff;
+        --secondary: #f1f5f9;
+        --secondary-foreground: #0f172a;
+        --muted: #f1f5f9;
+        --muted-foreground: #64748b;
+        --accent: #f1f5f9;
+        --accent-foreground: #0f172a;
+        --destructive: #ef4444;
+        --border: #e2e8f0;
+        --input: #e2e8f0;
+        --ring: #155dfc;
+        --radius: 0.625rem;
+    }
+
+    .dark {
+        --background: #131d31;
+        --foreground: #ffffff;
+        --card: #1d293d;
+        --card-foreground: #ffffff;
+        --popover: #1d293d;
+        --popover-foreground: #ffffff;
+        --primary: #155dfc;
+        --primary-foreground: #ffffff;
+        --secondary: #203a65;
+        --secondary-foreground: #ffffff;
+        --muted: #1d293d;
+        --muted-foreground: #9ca3af;
+        --accent: #203a65;
+        --accent-foreground: #ffffff;
+        --destructive: #ef4444;
+        --border: #334155;
+        --input: #334155;
+        --ring: #155dfc;
+    }
+}
+
+/* MapLibre */
+.maplibregl-map {
+    font-family: 'Manrope', sans-serif;
+}
+
+.maplibregl-popup-content {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+.maplibregl-popup-tip {
+    display: none !important;
+}
+
+/* CVJ DARK FORM COLOR START */
+.dark input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.dark select,
+.dark textarea {
+    background-color: #314158 !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+.dark select option {
+    background-color: #314158 !important;
+    color: #ffffff !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    border-color: #155dfc !important;
+    box-shadow: 0 0 0 2px rgba(21, 93, 252, 0.2) !important;
+}
+
+.dark input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 1;
+    filter: invert(74%) sepia(13%) saturate(536%) hue-rotate(176deg) brightness(86%) contrast(86%);
+}
+/* CVJ DARK FORM COLOR END */

@@ -34,6 +34,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'notifications' => fn () => $request->user()
+                ? app(\App\Services\NotificationService::class)->getForUser($request->user())
+                : [
+                    'count' => 0,
+                    'items' => [],
+                ],
         ];
     }
 }

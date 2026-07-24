@@ -1,5 +1,5 @@
-import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
 
 export default function ThemeToggle() {
     const [isDark, setIsDark] = useState(false);
@@ -16,28 +16,35 @@ export default function ThemeToggle() {
         }
     }, []);
 
-    const toggleTheme = () => {
-        const nextTheme = !isDark;
+    const handleToggleTheme = () => {
+        const darkActive = document.documentElement.classList.contains('dark');
 
-        setIsDark(nextTheme);
-
-        if (nextTheme) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
+        if (darkActive) {
             document.documentElement.classList.remove('dark');
             localStorage.setItem('theme', 'light');
+            setIsDark(false);
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            setIsDark(true);
         }
     };
 
     return (
         <button
             type="button"
-            onClick={toggleTheme}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 dark:text-yellow-400 dark:hover:bg-slate-800"
-            aria-label="Toggle theme"
+            onClick={handleToggleTheme}
+            className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {isDark ? (
+                <Sun size={22} strokeWidth={2.4} className="text-yellow-400" />
+            ) : (
+                <Moon
+                    size={21}
+                    strokeWidth={2.4}
+                    className="text-slate-700 dark:text-slate-300"
+                />
+            )}
         </button>
     );
 }

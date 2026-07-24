@@ -7,29 +7,11 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the default login view.
-     *
-     * Catatan:
-     * Route /login bawaan Laravel tetap diarahkan ke login admin
-     * agar kalau ada proses redirect ke login, user tetap masuk ke halaman login yang kita buat.
-     */
-    public function create(): Response
-    {
-        return Inertia::render('Auth/AdminLogin', [
-            'canResetPassword' => Route::has('password.request'),
-            'status' => session('status'),
-        ]);
-    }
-
-    /**
-     * Handle an incoming authentication request.
+     * Memproses login pengguna internal.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -55,12 +37,12 @@ class AuthenticatedSessionController extends Controller
         return redirect()
             ->route('login.admin')
             ->withErrors([
-                'email' => 'Role akun tidak dikenali.',
+                'username' => 'Akun tidak dapat digunakan untuk masuk ke sistem.',
             ]);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Memproses logout pengguna.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -70,6 +52,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('home');
     }
 }

@@ -6,6 +6,7 @@ import {
     LogOut,
     Package,
     ShoppingCart,
+    Truck,
     Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -26,9 +27,26 @@ export default function StaffSidebar() {
     const user = props.auth?.user;
 
     const menuItems = [
-        { label: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard },
-        { label: 'Data Produk', href: '/staff/produk', icon: Package },
-        { label: 'Data Pelanggan', href: '/staff/pelanggan', icon: Users },
+        {
+            label: 'Dashboard',
+            href: '/staff/dashboard',
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Data Produk',
+            href: '/staff/produk',
+            icon: Package,
+        },
+        {
+            label: 'Data Pelanggan',
+            href: '/staff/pelanggan',
+            icon: Users,
+        },
+        {
+            label: 'Transaksi Pembelian',
+            href: '/staff/pembelian',
+            icon: Truck,
+        },
         {
             label: 'Transaksi Penjualan',
             href: '/staff/transaksi',
@@ -37,7 +55,10 @@ export default function StaffSidebar() {
     ];
 
     useEffect(() => {
-        localStorage.setItem('staffSidebarCollapsed', isCollapsed);
+        localStorage.setItem(
+            'staffSidebarCollapsed',
+            isCollapsed,
+        );
     }, [isCollapsed]);
 
     const toggleSidebar = () => {
@@ -49,7 +70,10 @@ export default function StaffSidebar() {
     };
 
     const isMenuActive = (href) => {
-        return currentPath === href || currentPath.startsWith(`${href}/`);
+        return (
+            currentPath === href ||
+            currentPath.startsWith(`${href}/`)
+        );
     };
 
     return (
@@ -62,7 +86,11 @@ export default function StaffSidebar() {
                 type="button"
                 onClick={toggleSidebar}
                 className="absolute -right-3.5 top-8 z-[70] flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:bg-blue-50 hover:text-[#155dfc] dark:border-[#334155] dark:bg-[#131d31] dark:text-gray-300 dark:hover:bg-[#1d293d] dark:hover:text-[#60a5fa]"
-                title={isCollapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar'}
+                title={
+                    isCollapsed
+                        ? 'Tampilkan sidebar'
+                        : 'Sembunyikan sidebar'
+                }
             >
                 {isCollapsed ? (
                     <ChevronRight size={14} />
@@ -73,7 +101,9 @@ export default function StaffSidebar() {
 
             <div
                 className={`flex h-[64px] items-center px-4 ${
-                    isCollapsed ? 'justify-center' : 'gap-2 pr-8'
+                    isCollapsed
+                        ? 'justify-center'
+                        : 'gap-2 pr-8'
                 }`}
             >
                 <div className="site-logo flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
@@ -115,7 +145,9 @@ export default function StaffSidebar() {
                                     ? 'bg-[#155dfc] text-white shadow-md shadow-blue-600/20 dark:shadow-[#155dfc]/20'
                                     : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-gray-300 dark:hover:bg-[#131d31] dark:hover:text-white'
                             }`}
-                            title={isCollapsed ? item.label : ''}
+                            title={
+                                isCollapsed ? item.label : ''
+                            }
                         >
                             <Icon
                                 size={20}
@@ -124,7 +156,9 @@ export default function StaffSidebar() {
                             />
 
                             {!isCollapsed && (
-                                <span className="truncate">{item.label}</span>
+                                <span className="truncate">
+                                    {item.label}
+                                </span>
                             )}
                         </Link>
                     );
@@ -141,12 +175,16 @@ export default function StaffSidebar() {
                 >
                     <div
                         className={`flex items-center ${
-                            isCollapsed ? 'justify-center' : 'gap-3'
+                            isCollapsed
+                                ? 'justify-center'
+                                : 'gap-3'
                         }`}
                     >
                         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#155dfc] text-sm font-extrabold text-white">
                             {user?.name
-                                ? user.name.charAt(0).toUpperCase()
+                                ? user.name
+                                      .charAt(0)
+                                      .toUpperCase()
                                 : 'S'}
                         </div>
 

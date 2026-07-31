@@ -11,16 +11,24 @@ class EnsureUserIsActive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->is_active === false) {
+        $user = $request->user();
+
+        if ($user && ! $user->is_active) {
+            $role = $user->role;
+
             Auth::logout();
 
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
+            $loginRoute = $role === 'staff'
+                ? 'login.staff'
+                : 'login.admin';
+
             return redirect()
-                ->route('login.admin')
+                ->route($loginRoute)
                 ->withErrors([
-                    'username' => 'Akun pengguna tidak aktif.',
+                    'username' => 'Akun pengguna telah dinonaktifkan.',
                 ]);
         }
 

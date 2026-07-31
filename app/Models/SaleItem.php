@@ -19,6 +19,15 @@ class SaleItem extends Model
         'profit',
     ];
 
+    protected $casts = [
+        'purchase_price' => 'decimal:2',
+        'price' => 'decimal:2',
+        'quantity' => 'integer',
+        'purchase_subtotal' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'profit' => 'decimal:2',
+    ];
+
     public function sale()
     {
         return $this->belongsTo(Sale::class);

@@ -1,69 +1,55 @@
 import Swal from 'sweetalert2';
 
-const getTheme = () => {
-    const isDark = document.documentElement.classList.contains('dark');
+const primaryColor = '#155dfc';
+const dangerColor = '#dc2626';
+const cancelColor = '#64748b';
 
-    if (isDark) {
-        return {
-            background: '#1d293d',
-            color: '#ffffff',
-        };
-    }
+const getTheme = () => {
+    const isDarkMode =
+        typeof document !== 'undefined' &&
+        document.documentElement.classList.contains('dark');
 
     return {
-        background: '#ffffff',
-        color: '#0f172a',
+        background: isDarkMode ? '#1d293d' : '#ffffff',
+        color: isDarkMode ? '#ffffff' : '#0f172a',
     };
 };
 
-const buttonColor = '#155dfc';
-const dangerColor = '#dc2626';
-
-const modalClass = {
-    popup: 'rounded-2xl px-4 py-4 shadow-xl',
-    title: 'text-base font-extrabold',
-    htmlContainer: 'text-sm font-medium',
-    confirmButton:
-        'rounded-lg bg-[#155dfc] px-4 py-2 text-xs font-bold text-white hover:bg-blue-700',
-    cancelButton:
-        'rounded-lg bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-[#314158] dark:text-white',
-};
-
-const dangerModalClass = {
-    ...modalClass,
-    confirmButton:
-        'rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700',
-};
-
-export const showSuccess = (message = 'Data berhasil diproses.') => {
+export const showSuccess = (
+    message = 'Data berhasil diproses.',
+) => {
     return Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: message,
-        timer: 1700,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        width: '320px',
         ...getTheme(),
-        customClass: {
-            popup: 'rounded-xl px-3 py-2 shadow-lg',
-            title: 'text-sm font-bold',
-        },
+        icon: 'success',
+        title: 'Berhasil',
+        text: message,
+        timer: 1800,
+        timerProgressBar: true,
+        showConfirmButton: false,
     });
 };
 
-export const showError = (message = 'Terjadi kesalahan.') => {
+export const showError = (
+    message = 'Terjadi kesalahan. Silakan coba kembali.',
+) => {
     return Swal.fire({
+        ...getTheme(),
+        icon: 'error',
         title: 'Gagal',
         text: message,
-        width: '360px',
-        padding: '16px',
         confirmButtonText: 'Tutup',
-        buttonsStyling: false,
-        confirmButtonColor: buttonColor,
+        confirmButtonColor: primaryColor,
+    });
+};
+
+export const showInfo = (message = '') => {
+    return Swal.fire({
         ...getTheme(),
-        customClass: modalClass,
+        icon: 'info',
+        title: 'Informasi',
+        text: message,
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: primaryColor,
     });
 };
 
@@ -72,24 +58,26 @@ export const confirmAction = async ({
     text = '',
     confirmButtonText = 'Ya',
     cancelButtonText = 'Batal',
-    type = 'question',
+    icon,
+    type,
+    isDanger = false,
 } = {}) => {
-    const isWarning = type === 'warning';
+    const selectedIcon = icon || type || 'question';
 
     const result = await Swal.fire({
+        ...getTheme(),
+        icon: selectedIcon,
         title,
         text,
-        width: '360px',
-        padding: '16px',
         showCancelButton: true,
         confirmButtonText,
         cancelButtonText,
+        confirmButtonColor: isDanger
+            ? dangerColor
+            : primaryColor,
+        cancelButtonColor: cancelColor,
         reverseButtons: true,
-        focusConfirm: false,
-        buttonsStyling: false,
-        confirmButtonColor: isWarning ? dangerColor : buttonColor,
-        ...getTheme(),
-        customClass: isWarning ? dangerModalClass : modalClass,
+        focusCancel: true,
     });
 
     return result.isConfirmed;
@@ -99,53 +87,57 @@ export const confirmStatus = async ({
     title = 'Ubah status data?',
     text = 'Status data akan diperbarui.',
     confirmButtonText = 'Ya, Ubah',
+    cancelButtonText = 'Batal',
 } = {}) => {
     return confirmAction({
         title,
         text,
         confirmButtonText,
-        cancelButtonText: 'Batal',
-        type: 'question',
+        cancelButtonText,
+        icon: 'question',
+        isDanger: false,
     });
 };
 
 export const inputReason = async ({
     title = 'Masukkan alasan',
+    text = '',
+    inputLabel = 'Alasan',
     inputPlaceholder = 'Tulis alasan di sini...',
     confirmButtonText = 'Lanjutkan',
+    cancelButtonText = 'Batal',
+    minimumLength = 3,
 } = {}) => {
     const result = await Swal.fire({
+        ...getTheme(),
+        icon: 'warning',
         title,
-        input: 'text',
+        text,
+        input: 'textarea',
+        inputLabel,
         inputPlaceholder,
-        width: '320px',
-        padding: '14px',
+        inputAttributes: {
+            maxlength: '1000',
+        },
         showCancelButton: true,
         confirmButtonText,
-        cancelButtonText: 'Batal',
-        reverseButtons: true,
-        focusConfirm: false,
-        buttonsStyling: false,
+        cancelButtonText,
         confirmButtonColor: dangerColor,
-        inputAttributes: {
-            maxlength: 255,
-        },
+        cancelButtonColor: cancelColor,
+        reverseButtons: true,
+        focusCancel: true,
         inputValidator: (value) => {
-            if (!value || !value.trim()) {
+            const reason = value?.trim() || '';
+
+            if (!reason) {
                 return 'Alasan wajib diisi.';
             }
 
-            return null;
-        },
-        ...getTheme(),
-        customClass: {
-            popup: 'rounded-xl px-3 py-3 shadow-lg',
-            title: 'text-sm font-extrabold',
-            input: 'h-10 rounded-xl border border-slate-200 px-3 text-sm focus:border-[#155dfc] focus:ring-[#155dfc]/20 dark:border-[#475569] dark:bg-[#314158] dark:text-white',
-            confirmButton:
-                'rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700',
-            cancelButton:
-                'rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-[#314158] dark:text-white',
+            if (reason.length < minimumLength) {
+                return `Alasan minimal ${minimumLength} karakter.`;
+            }
+
+            return undefined;
         },
     });
 
@@ -153,29 +145,11 @@ export const inputReason = async ({
         return null;
     }
 
-    return result.value;
+    return result.value?.trim() || null;
 };
 
-export const showInfo = ({
-    title = 'Informasi',
-    text = '',
-    confirmButtonText = 'Tutup',
-} = {}) => {
-    return Swal.fire({
-        title,
-        text,
-        width: '320px',
-        padding: '14px',
-        confirmButtonText,
-        buttonsStyling: false,
-        confirmButtonColor: buttonColor,
-        ...getTheme(),
-        customClass: {
-            popup: 'rounded-xl px-3 py-3 shadow-lg',
-            title: 'text-sm font-extrabold',
-            htmlContainer: 'text-xs font-medium',
-            confirmButton:
-                'rounded-lg bg-[#155dfc] px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700',
-        },
-    });
+export {
+    primaryColor,
+    dangerColor,
+    cancelColor,
 };

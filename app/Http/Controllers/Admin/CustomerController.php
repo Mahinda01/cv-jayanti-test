@@ -5,31 +5,55 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CustomerController extends Controller
 {
     public function index()
     {
+        $isStaff = $this->isStaffRequest();
+
         $customers = Customer::orderBy('id')
             ->get()
-            ->map(function ($customer) {
-                return [
+            ->map(function ($customer) use ($isStaff) {
+                $data = [
                     'id' => $customer->id,
-                    'code' => 'C' . str_pad($customer->id, 3, '0', STR_PAD_LEFT),
+                    'code' => 'C' . str_pad(
+                        $customer->id,
+                        3,
+                        '0',
+                        STR_PAD_LEFT
+                    ),
                     'name' => $customer->name,
                     'contact' => $customer->contact,
                     'address' => $customer->address,
-                    'total_receivable' => $customer->total_receivable,
-                    'total_receivable_text' => 'Rp ' . number_format($customer->total_receivable, 0, ',', '.'),
-                    'receivable_status' => $customer->receivable_status,
-                    'is_active' => $customer->is_active,
+                    'is_active' => (bool) $customer->is_active,
                 ];
+
+                if (! $isStaff) {
+                    $totalReceivable = (float) $customer->total_receivable;
+
+                    $data['total_receivable'] = $totalReceivable;
+                    $data['total_receivable_text'] =
+                        'Rp ' . number_format(
+                            $totalReceivable,
+                            0,
+                            ',',
+                            '.'
+                        );
+
+                    $data['receivable_status'] =
+                        $totalReceivable > 0
+                            ? $customer->receivable_status
+                            : 'Tidak Ada Piutang';
+                }
+
+                return $data;
             });
 
         return Inertia::render($this->view('Customers/Index'), [
             'customers' => $customers,
+            'showReceivable' => ! $isStaff,
         ]);
     }
 
@@ -40,60 +64,83 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        $rules = [
-            'name' => ['required', 'string', 'max:100'],
-            'contact' => ['nullable', 'string', 'max:30'],
-            'address' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ];
-
-        if (! request()->routeIs('staff.*')) {
-            $rules['total_receivable'] = ['nullable', 'numeric', 'min:0'];
-            $rules['receivable_status'] = [
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'contact' => [
+                'required',
+                'string',
+                'max:30',
+            ],
+            'address' => [
                 'nullable',
-                Rule::in(['Tidak Ada Piutang', 'Belum Lunas', 'Jatuh Tempo']),
-            ];
-        }
+                'string',
+                'max:1000',
+            ],
+        ]);
 
-        $validated = $request->validate($rules);
+        $address = trim($validated['address'] ?? '');
 
-        if (request()->routeIs('staff.*')) {
-            $validated['total_receivable'] = 0;
-            $validated['receivable_status'] = 'Tidak Ada Piutang';
-        } else {
-            $validated['total_receivable'] = $validated['total_receivable'] ?? 0;
-
-            if ($validated['total_receivable'] <= 0) {
-                $validated['receivable_status'] = 'Tidak Ada Piutang';
-            } else {
-                $validated['receivable_status'] = $validated['receivable_status'] ?? 'Belum Lunas';
-            }
-        }
-
-        $validated['is_active'] = $request->boolean('is_active', true);
-
-        Customer::create($validated);
+        Customer::create([
+            'name' => trim($validated['name']),
+            'contact' => trim($validated['contact']),
+            'address' => $address !== '' ? $address : null,
+            'total_receivable' => 0,
+            'receivable_status' => 'Tidak Ada Piutang',
+            'is_active' => true,
+        ]);
 
         return redirect()
             ->route($this->routeName('customers.index'))
-            ->with('success', 'Data pelanggan berhasil ditambahkan.');
+            ->with(
+                'success',
+                'Data pelanggan berhasil ditambahkan.'
+            );
     }
 
     public function edit($id)
     {
         $customer = Customer::findOrFail($id);
+        $isStaff = $this->isStaffRequest();
+
+        $data = [
+            'id' => $customer->id,
+            'code' => 'C' . str_pad(
+                $customer->id,
+                3,
+                '0',
+                STR_PAD_LEFT
+            ),
+            'name' => $customer->name,
+            'contact' => $customer->contact,
+            'address' => $customer->address,
+            'is_active' => (bool) $customer->is_active,
+        ];
+
+        if (! $isStaff) {
+            $totalReceivable = (float) $customer->total_receivable;
+
+            $data['total_receivable'] = $totalReceivable;
+            $data['total_receivable_text'] =
+                'Rp ' . number_format(
+                    $totalReceivable,
+                    0,
+                    ',',
+                    '.'
+                );
+
+            $data['receivable_status'] =
+                $totalReceivable > 0
+                    ? $customer->receivable_status
+                    : 'Tidak Ada Piutang';
+        }
 
         return Inertia::render($this->view('Customers/Edit'), [
-            'customer' => [
-                'id' => $customer->id,
-                'code' => 'C' . str_pad($customer->id, 3, '0', STR_PAD_LEFT),
-                'name' => $customer->name,
-                'contact' => $customer->contact,
-                'address' => $customer->address,
-                'total_receivable' => $customer->total_receivable,
-                'receivable_status' => $customer->receivable_status,
-                'is_active' => $customer->is_active,
-            ],
+            'customer' => $data,
+            'showReceivable' => ! $isStaff,
         ]);
     }
 
@@ -101,68 +148,84 @@ class CustomerController extends Controller
     {
         $customer = Customer::findOrFail($id);
 
-        $rules = [
-            'name' => ['required', 'string', 'max:100'],
-            'contact' => ['nullable', 'string', 'max:30'],
-            'address' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-        ];
-
-        if (! request()->routeIs('staff.*')) {
-            $rules['total_receivable'] = ['nullable', 'numeric', 'min:0'];
-            $rules['receivable_status'] = [
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'contact' => [
+                'required',
+                'string',
+                'max:30',
+            ],
+            'address' => [
                 'nullable',
-                Rule::in(['Tidak Ada Piutang', 'Belum Lunas', 'Jatuh Tempo']),
-            ];
-        }
+                'string',
+                'max:1000',
+            ],
+        ]);
 
-        $validated = $request->validate($rules);
+        $address = trim($validated['address'] ?? '');
 
-        if (request()->routeIs('staff.*')) {
-            $validated['total_receivable'] = $customer->total_receivable;
-            $validated['receivable_status'] = $customer->receivable_status;
-        } else {
-            $validated['total_receivable'] = $validated['total_receivable'] ?? 0;
-
-            if ($validated['total_receivable'] <= 0) {
-                $validated['receivable_status'] = 'Tidak Ada Piutang';
-            } else {
-                $validated['receivable_status'] = $validated['receivable_status'] ?? 'Belum Lunas';
-            }
-        }
-
-        $validated['is_active'] = $request->boolean('is_active', true);
-
-        $customer->update($validated);
+        $customer->update([
+            'name' => trim($validated['name']),
+            'contact' => trim($validated['contact']),
+            'address' => $address !== '' ? $address : null,
+        ]);
 
         return redirect()
             ->route($this->routeName('customers.index'))
-            ->with('success', 'Data pelanggan berhasil diperbarui.');
+            ->with(
+                'success',
+                'Data pelanggan berhasil diperbarui.'
+            );
     }
 
     public function toggleStatus($id)
     {
         $customer = Customer::findOrFail($id);
 
+        if (
+            $customer->is_active &&
+            (float) $customer->total_receivable > 0
+        ) {
+            return redirect()
+                ->route($this->routeName('customers.index'))
+                ->with(
+                    'error',
+                    'Pelanggan tidak dapat dinonaktifkan karena masih memiliki piutang.'
+                );
+        }
+
         $customer->update([
             'is_active' => ! $customer->is_active,
         ]);
 
+        $message = $customer->is_active
+            ? 'Pelanggan berhasil diaktifkan.'
+            : 'Pelanggan berhasil dinonaktifkan.';
+
         return redirect()
             ->route($this->routeName('customers.index'))
-            ->with('success', 'Status pelanggan berhasil diperbarui.');
+            ->with('success', $message);
     }
 
-    private function view(string $page): string
+    protected function isStaffRequest(): bool
     {
-        return request()->routeIs('staff.*')
+        return request()->routeIs('staff.*');
+    }
+
+    protected function view(string $page): string
+    {
+        return $this->isStaffRequest()
             ? 'Staff/' . $page
             : 'Admin/' . $page;
     }
 
-    private function routeName(string $name): string
+    protected function routeName(string $name): string
     {
-        return request()->routeIs('staff.*')
+        return $this->isStaffRequest()
             ? 'staff.' . $name
             : 'admin.' . $name;
     }

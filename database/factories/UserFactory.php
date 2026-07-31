@@ -10,16 +10,8 @@ use Illuminate\Support\Facades\Hash;
  */
 class UserFactory extends Factory
 {
-    /**
-     * Password default untuk data dummy.
-     */
     protected static ?string $password;
 
-    /**
-     * Mendefinisikan data dummy user.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -27,6 +19,7 @@ class UserFactory extends Factory
             'username' => fake()->unique()->userName(),
             'password' => static::$password ??= Hash::make('password'),
             'role' => fake()->randomElement(['admin', 'staff']),
+            'is_main_admin' => false,
             'is_active' => true,
         ];
     }

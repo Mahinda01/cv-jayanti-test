@@ -16,6 +16,12 @@ class PurchaseItem extends Model
         'subtotal',
     ];
 
+    protected $casts = [
+        'purchase_price' => 'decimal:2',
+        'quantity' => 'integer',
+        'subtotal' => 'decimal:2',
+    ];
+
     public function purchase()
     {
         return $this->belongsTo(Purchase::class);

@@ -9,6 +9,9 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'customer_id',
+        'customer_name',
+        'customer_contact',
+        'customer_address',
         'user_id',
         'sale_date',
         'due_date',
@@ -22,6 +25,15 @@ class Sale extends Model
         'cancelled_by',
         'cancel_reason',
         'notes',
+    ];
+
+    protected $casts = [
+        'sale_date' => 'date',
+        'due_date' => 'date',
+        'cancelled_at' => 'datetime',
+        'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
     ];
 
     public function customer()

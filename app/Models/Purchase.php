@@ -21,6 +21,7 @@ class Purchase extends Model
 
     protected $casts = [
         'purchase_date' => 'date',
+        'total_amount' => 'decimal:2',
         'cancelled_at' => 'datetime',
     ];
 

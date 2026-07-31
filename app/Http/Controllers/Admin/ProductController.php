@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -16,25 +18,29 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('category')
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->get()
             ->map(function ($product) {
                 return [
                     'id' => $product->id,
-                    'code' => 'P' . str_pad($product->id, 3, '0', STR_PAD_LEFT),
+                    'code' => 'P' . str_pad(
+                        $product->id,
+                        3,
+                        '0',
+                        STR_PAD_LEFT
+                    ),
+                    'product_category_id' =>
+                        $product->product_category_id,
                     'name' => $product->name,
-                    'slug' => $product->slug,
-                    'category' => $product->category?->name,
-                    'supplier' => $product->supplier,
-                    'description' => $product->description,
+                    'category' => $product->category?->name ?? '-',
+                    'category_slug' => $product->category?->slug,
                     'stock' => $product->stock,
                     'minimum_stock' => $product->minimum_stock,
                     'unit' => $product->unit,
                     'location' => $product->location,
                     'purchase_price' => $product->purchase_price,
                     'price' => $product->price,
-                    'is_active' => $product->is_active,
-                    'created_at' => $product->created_at->format('d M Y'),
+                    'is_active' => (bool) $product->is_active,
                 ];
             });
 
@@ -45,19 +51,8 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = ProductCategory::where('is_active', true)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'default_unit' => $category->default_unit ?: 'Pcs',
-                ];
-            });
-
         return Inertia::render($this->view('Products/Create'), [
-            'categories' => $categories,
+            'categories' => $this->getCategories(),
         ]);
     }
 
@@ -66,71 +61,117 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_category_id' => [
                 'required',
-                function ($attribute, $value, $fail) {
-                    if ($value === '__new__') {
-                        return;
-                    }
-
-                    $exists = ProductCategory::where('id', $value)
-                        ->where('is_active', true)
-                        ->exists();
-
-                    if (! $exists) {
-                        $fail('Kategori yang dipilih tidak valid.');
-                    }
-                },
             ],
             'new_category_name' => [
                 'nullable',
                 'string',
                 'max:100',
-                Rule::requiredIf($request->input('product_category_id') === '__new__'),
             ],
             'new_category_default_unit' => [
                 'nullable',
-                'string',
                 Rule::in(['Pcs', 'Meter', 'Unit', 'Set']),
-                Rule::requiredIf($request->input('product_category_id') === '__new__'),
             ],
             'name' => [
                 'required',
                 'string',
                 'max:150',
-                Rule::unique('products', 'name'),
             ],
-            'description' => ['nullable', 'string'],
-            'supplier' => ['nullable', 'string', 'max:150'],
-            'stock' => ['required', 'integer', 'min:0'],
-            'minimum_stock' => ['required', 'integer', 'min:0'],
-            'location' => ['nullable', 'string', 'max:150'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'is_active' => ['required', 'boolean'],
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+            'stock' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
+            'minimum_stock' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
+            'unit' => [
+                'required',
+                Rule::in(['Pcs', 'Meter', 'Unit', 'Set']),
+            ],
+            'location' => [
+                'required',
+                Rule::in([
+                    'Gudang Dalam',
+                    'Gudang Samping',
+                    'Jolly Box Merah',
+                    'Jolly Box Biru',
+                    'Jolly Box Kuning',
+                    'Jolly Box Hijau',
+                ]),
+            ],
+            'purchase_price' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+            'price' => [
+                'required',
+                'numeric',
+                'min:1',
+            ],
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
         ]);
 
-        $category = $this->getCategory($request);
-        $imagePath = null;
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+        if (
+            (int) $validated['stock'] > 0 &&
+            (float) $validated['purchase_price'] <= 0
+        ) {
+            throw ValidationException::withMessages([
+                'purchase_price' =>
+                    'Harga modal awal wajib lebih dari 0 ketika stok awal tersedia.',
+            ]);
         }
 
-        Product::create([
-            'product_category_id' => $category->id,
-            'name' => $validated['name'],
-            'slug' => $this->makeUniqueSlug($validated['name']),
-            'description' => $validated['description'] ?? null,
-            'supplier' => $validated['supplier'] ?? null,
-            'stock' => $validated['stock'],
-            'minimum_stock' => $validated['minimum_stock'],
-            'unit' => $category->default_unit ?: 'Pcs',
-            'location' => $validated['location'] ?? null,
-            'purchase_price' => $validated['purchase_price'],
-            'price' => $validated['price'],
-            'image' => $imagePath,
-            'is_active' => $validated['is_active'],
-        ]);
+        DB::transaction(function () use ($validated) {
+            $category = $this->resolveCategory(
+                $validated,
+                true
+            );
+
+            $unit = $category->slug === 'other'
+                ? $validated['unit']
+                : $category->default_unit;
+
+            $imagePath = null;
+
+            if (! empty($validated['image'])) {
+                $imagePath = $validated['image']->store(
+                    'products',
+                    'public'
+                );
+            }
+
+            Product::create([
+                'product_category_id' => $category->id,
+                'name' => $validated['name'],
+                'slug' => $this->generateProductSlug(
+                    $validated['name']
+                ),
+                'description' => $validated['description'] ?? null,
+                'stock' => (int) $validated['stock'],
+                'minimum_stock' =>
+                    (int) $validated['minimum_stock'],
+                'unit' => $unit,
+                'location' => $validated['location'],
+                'purchase_price' =>
+                    (float) $validated['purchase_price'],
+                'price' => (float) $validated['price'],
+                'image' => $imagePath,
+                'is_active' => true,
+            ]);
+        });
 
         return redirect()
             ->route($this->routeName('products.index'))
@@ -139,27 +180,21 @@ class ProductController extends Controller
 
     public function edit($id)
     {
-        $product = Product::findOrFail($id);
-
-        $categories = ProductCategory::where('is_active', true)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'default_unit' => $category->default_unit ?: 'Pcs',
-                ];
-            });
+        $product = Product::with('category')->findOrFail($id);
 
         return Inertia::render($this->view('Products/Edit'), [
             'product' => [
                 'id' => $product->id,
-                'code' => 'P' . str_pad($product->id, 3, '0', STR_PAD_LEFT),
-                'product_category_id' => $product->product_category_id,
+                'code' => 'P' . str_pad(
+                    $product->id,
+                    3,
+                    '0',
+                    STR_PAD_LEFT
+                ),
+                'product_category_id' =>
+                    $product->product_category_id,
                 'name' => $product->name,
                 'description' => $product->description,
-                'supplier' => $product->supplier,
                 'stock' => $product->stock,
                 'minimum_stock' => $product->minimum_stock,
                 'unit' => $product->unit,
@@ -167,10 +202,12 @@ class ProductController extends Controller
                 'purchase_price' => $product->purchase_price,
                 'price' => $product->price,
                 'image' => $product->image,
-                'image_url' => $this->imageUrl($product->image),
-                'is_active' => $product->is_active,
+                'image_url' => $product->image
+                    ? Storage::url($product->image)
+                    : null,
+                'is_active' => (bool) $product->is_active,
             ],
-            'categories' => $categories,
+            'categories' => $this->getCategories(),
         ]);
     }
 
@@ -181,73 +218,110 @@ class ProductController extends Controller
         $validated = $request->validate([
             'product_category_id' => [
                 'required',
-                function ($attribute, $value, $fail) {
-                    if ($value === '__new__') {
-                        return;
-                    }
-
-                    $exists = ProductCategory::where('id', $value)
-                        ->where('is_active', true)
-                        ->exists();
-
-                    if (! $exists) {
-                        $fail('Kategori yang dipilih tidak valid.');
-                    }
-                },
-            ],
-            'new_category_name' => [
-                'nullable',
-                'string',
-                'max:100',
-                Rule::requiredIf($request->input('product_category_id') === '__new__'),
-            ],
-            'new_category_default_unit' => [
-                'nullable',
-                'string',
-                Rule::in(['Pcs', 'Meter', 'Unit', 'Set']),
-                Rule::requiredIf($request->input('product_category_id') === '__new__'),
+                'integer',
+                Rule::exists('product_categories', 'id')
+                    ->where(function ($query) {
+                        $query->where('is_active', true);
+                    }),
             ],
             'name' => [
                 'required',
                 'string',
                 'max:150',
-                Rule::unique('products', 'name')->ignore($product->id),
             ],
-            'description' => ['nullable', 'string'],
-            'supplier' => ['nullable', 'string', 'max:150'],
-            'minimum_stock' => ['required', 'integer', 'min:0'],
-            'location' => ['nullable', 'string', 'max:150'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'is_active' => ['required', 'boolean'],
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+            'minimum_stock' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
+            'unit' => [
+                'required',
+                Rule::in(['Pcs', 'Meter', 'Unit', 'Set']),
+            ],
+            'location' => [
+                'required',
+                Rule::in([
+                    'Gudang Dalam',
+                    'Gudang Samping',
+                    'Jolly Box Merah',
+                    'Jolly Box Biru',
+                    'Jolly Box Kuning',
+                    'Jolly Box Hijau',
+                ]),
+            ],
+            'price' => [
+                'required',
+                'numeric',
+                'min:1',
+            ],
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
         ]);
 
-        $category = $this->getCategory($request);
-        $imagePath = $product->image;
+        DB::transaction(function () use (
+            $product,
+            $validated
+        ) {
+            $category = ProductCategory::whereKey(
+                $validated['product_category_id']
+            )
+                ->where('is_active', true)
+                ->first();
 
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+            if (! $category) {
+                throw ValidationException::withMessages([
+                    'product_category_id' =>
+                        'Kategori tidak valid atau sudah tidak aktif.',
+                ]);
             }
 
-            $imagePath = $request->file('image')->store('products', 'public');
-        }
+            $unit = $category->slug === 'other'
+                ? $validated['unit']
+                : $category->default_unit;
 
-        $product->update([
-            'product_category_id' => $category->id,
-            'name' => $validated['name'],
-            'slug' => $this->makeUniqueSlug($validated['name'], $product->id),
-            'description' => $validated['description'] ?? null,
-            'supplier' => $validated['supplier'] ?? null,
-            'minimum_stock' => $validated['minimum_stock'],
-            'unit' => $category->default_unit ?: 'Pcs',
-            'location' => $validated['location'] ?? null,
-            'purchase_price' => $validated['purchase_price'],
-            'price' => $validated['price'],
-            'image' => $imagePath,
-            'is_active' => $validated['is_active'],
-        ]);
+            $updateData = [
+                'product_category_id' => $category->id,
+                'name' => $validated['name'],
+                'slug' => $this->generateProductSlug(
+                    $validated['name'],
+                    $product->id
+                ),
+                'description' => $validated['description'] ?? null,
+                'minimum_stock' =>
+                    (int) $validated['minimum_stock'],
+                'unit' => $unit,
+                'location' => $validated['location'],
+                'price' => (float) $validated['price'],
+            ];
+
+            $oldImage = $product->image;
+
+            if (! empty($validated['image'])) {
+                $updateData['image'] =
+                    $validated['image']->store(
+                        'products',
+                        'public'
+                    );
+            }
+
+            $product->update($updateData);
+
+            if (
+                ! empty($updateData['image']) &&
+                $oldImage
+            ) {
+                Storage::disk('public')->delete($oldImage);
+            }
+        });
 
         return redirect()
             ->route($this->routeName('products.index'))
@@ -262,77 +336,123 @@ class ProductController extends Controller
             'is_active' => ! $product->is_active,
         ]);
 
+        $message = $product->is_active
+            ? 'Produk berhasil diaktifkan.'
+            : 'Produk berhasil dinonaktifkan.';
+
         return redirect()
             ->route($this->routeName('products.index'))
-            ->with('success', 'Status produk berhasil diperbarui.');
+            ->with('success', $message);
     }
 
-    private function getCategory(Request $request)
-    {
-        if ($request->input('product_category_id') !== '__new__') {
-            return ProductCategory::findOrFail($request->input('product_category_id'));
+    private function resolveCategory(
+        array $validated,
+        bool $allowCreate
+    ): ProductCategory {
+        if (
+            $allowCreate &&
+            $validated['product_category_id'] === '__new__'
+        ) {
+            $categoryName = trim(
+                $validated['new_category_name'] ?? ''
+            );
+
+            $defaultUnit =
+                $validated['new_category_default_unit']
+                ?? null;
+
+            if ($categoryName === '') {
+                throw ValidationException::withMessages([
+                    'new_category_name' =>
+                        'Nama kategori baru wajib diisi.',
+                ]);
+            }
+
+            if (! in_array(
+                $defaultUnit,
+                ['Pcs', 'Meter', 'Unit', 'Set'],
+                true
+            )) {
+                throw ValidationException::withMessages([
+                    'new_category_default_unit' =>
+                        'Satuan kategori baru tidak valid.',
+                ]);
+            }
+
+            $slug = Str::slug($categoryName);
+
+            if (
+                ProductCategory::where('slug', $slug)->exists()
+            ) {
+                throw ValidationException::withMessages([
+                    'new_category_name' =>
+                        'Kategori tersebut sudah tersedia.',
+                ]);
+            }
+
+            return ProductCategory::create([
+                'name' => $categoryName,
+                'slug' => $slug,
+                'default_unit' => $defaultUnit,
+                'is_active' => true,
+            ]);
         }
 
-        $categoryName = trim($request->input('new_category_name'));
-        $defaultUnit = $request->input('new_category_default_unit') ?: 'Pcs';
+        $category = ProductCategory::whereKey(
+            $validated['product_category_id']
+        )
+            ->where('is_active', true)
+            ->first();
 
-        $existingCategory = ProductCategory::whereRaw('LOWER(name) = ?', [
-            strtolower($categoryName),
-        ])->first();
-
-        if ($existingCategory) {
-            $existingCategory->is_active = true;
-            $existingCategory->default_unit = $defaultUnit;
-            $existingCategory->save();
-
-            return $existingCategory;
+        if (! $category) {
+            throw ValidationException::withMessages([
+                'product_category_id' =>
+                    'Kategori tidak valid atau sudah tidak aktif.',
+            ]);
         }
-
-        $category = new ProductCategory();
-        $category->name = $categoryName;
-        $category->default_unit = $defaultUnit;
-        $category->is_active = true;
-        $category->save();
 
         return $category;
     }
 
-    private function makeUniqueSlug($name, $ignoreId = null)
+    private function getCategories()
     {
-        $slug = Str::slug($name);
+        return ProductCategory::where('is_active', true)
+            ->orderBy('id')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'default_unit' =>
+                        $category->default_unit,
+                ];
+            });
+    }
 
-        if ($slug === '') {
-            $slug = 'produk';
-        }
-
-        $originalSlug = $slug;
+    private function generateProductSlug(
+        string $name,
+        ?int $ignoreId = null
+    ): string {
+        $baseSlug = Str::slug($name);
+        $slug = $baseSlug;
         $number = 1;
 
         while (
             Product::where('slug', $slug)
-                ->when($ignoreId, function ($query) use ($ignoreId) {
-                    $query->where('id', '!=', $ignoreId);
-                })
+                ->when(
+                    $ignoreId,
+                    function ($query) use ($ignoreId) {
+                        $query->where('id', '!=', $ignoreId);
+                    }
+                )
                 ->exists()
         ) {
-            $slug = $originalSlug . '-' . $number;
+            $slug = $baseSlug . '-' . $number;
             $number++;
         }
 
         return $slug;
-    }
-
-    private function imageUrl($image)
-    {
-        if (! $image) {
-            return null;
-        }
-
-        if (Str::startsWith($image, ['http://', 'https://', '/'])) {
-            return $image;
-        }
-
-        return Storage::url($image);
     }
 
     private function view(string $page): string
